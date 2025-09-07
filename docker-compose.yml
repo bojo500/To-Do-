@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app               # mount project for live reload
+      - /usr/src/app/node_modules    # preserve node_modules inside container
+    ports:
+      - "3001:3000"                  # map container port to host
+    env_file:
+      - .env                         # load environment variables
+    command: yarn start:dev          # dev mode with watch
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    restart: always
+
+volumes:
+  dbdata:
