@@ -1,6 +1,36 @@
 version: "3.9"
 
 services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dataone
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    restart: always
+    ports:
+      - "8886:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: pma
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - "8899:80"
+
   nestjs:
     build:
       context: .
@@ -9,36 +39,10 @@ services:
       - .:/usr/src/app               # mount project for live reload
       - /usr/src/app/node_modules    # preserve node_modules inside container
     ports:
-      - "3001:3000"                  # host:container
+      - "3001:3000"                  # map container port to host
     env_file:
-      - .env
-    command: yarn start:dev
-    restart: always
-    depends_on:
-      - db
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: root
-    restart: always
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
+      - .env                         # load environment variables
+    command: yarn start:dev          # dev mode with watch
     restart: always
 
 volumes:
