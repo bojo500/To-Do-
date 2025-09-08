@@ -9,15 +9,27 @@ services:
       - .:/usr/src/app               # mount project for live reload
       - /usr/src/app/node_modules    # preserve node_modules inside container
     ports:
-      - "3001:3000"                  # map container port to host
+      - "3001:3000"                  # host:container
     env_file:
-      - .env                         # load environment variables
-    command: yarn start:dev          # dev mode with watch
+      - .env
+    command: yarn start:dev
     restart: always
-
+    depends_on:
+      - db
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
   db:
     image: mysql:8.0
-    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: testdb
